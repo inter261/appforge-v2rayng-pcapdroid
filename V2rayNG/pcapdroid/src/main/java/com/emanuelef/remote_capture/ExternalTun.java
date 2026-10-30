@@ -10,6 +10,7 @@
 package com.emanuelef.remote_capture;
 
 import android.content.Context;
+import android.os.ParcelFileDescriptor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,8 +26,8 @@ import com.emanuelef.remote_capture.model.CaptureSettings;
  * in VPN mode. All the TCP connections are forwarded to a local SOCKS5 proxy (the Xray core).
  */
 public final class ExternalTun {
-    /** Intent extra (CaptureService): ParcelFileDescriptor of the tun interface owned by the host */
-    public static final String EXTRA_TUN_FD = "ext_tun_fd";
+    /** Intent extra (CaptureService): true if a tun fd was staged with {@link #stageTunFd} */
+    public static final String EXTRA_HAS_TUN = "ext_has_tun";
     /** Intent extra (CaptureService): IPv4 address assigned to the host tun interface */
     public static final String EXTRA_VPN_IPV4 = "ext_vpn_ipv4";
     /** Intent extra (CaptureService): IPv4 DNS server configured on the host tun interface */
@@ -54,6 +55,29 @@ public final class ExternalTun {
     }
 
     private static volatile Provider sProvider;
+
+    // A ParcelFileDescriptor cannot travel in the Intent of startService (the system refuses it
+    // with "Not allowed to write file descriptors here"). Host and CaptureService live in the
+    // same process, so the fd is handed over through memory instead.
+    private static final Object sTunLock = new Object();
+    private static ParcelFileDescriptor sStagedTunFd;
+
+    public static void stageTunFd(@Nullable ParcelFileDescriptor fd) {
+        synchronized (sTunLock) {
+            if((sStagedTunFd != null) && (sStagedTunFd != fd)) {
+                try { sStagedTunFd.close(); } catch (Exception ignored) {}
+            }
+            sStagedTunFd = fd;
+        }
+    }
+
+    public static @Nullable ParcelFileDescriptor takeTunFd() {
+        synchronized (sTunLock) {
+            ParcelFileDescriptor fd = sStagedTunFd;
+            sStagedTunFd = null;
+            return fd;
+        }
+    }
 
     private ExternalTun() {}
 

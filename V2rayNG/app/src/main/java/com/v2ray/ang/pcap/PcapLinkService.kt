@@ -52,7 +52,6 @@ class PcapLinkService : Service() {
 
             settings.root_capture = false
             settings.input_pcap_path = null
-            settings.tls_decryption = false
 
             // All the TCP traffic goes to the local SOCKS5 inbound of the Xray core
             settings.socks5_enabled = true
@@ -67,20 +66,24 @@ class PcapLinkService : Service() {
             // UDP is not proxied in this mode: force QUIC clients to fall back to TCP
             settings.block_quic_mode = Prefs.BlockQuicMode.ALWAYS
 
+            // the fd cannot go in the Intent (startService refuses file descriptors): stage a dup
+            ExternalTun.stageTunFd(tunFd.dup())
+
             val intent = Intent(this, CaptureService::class.java)
                 .putExtra("settings", settings)
-                .putExtra(ExternalTun.EXTRA_TUN_FD, tunFd)
+                .putExtra(ExternalTun.EXTRA_HAS_TUN, true)
                 .putExtra(ExternalTun.EXTRA_VPN_IPV4, data.getString(PcapLink.KEY_IPV4))
                 .putExtra(ExternalTun.EXTRA_VPN_DNS, data.getString(PcapLink.KEY_DNS))
                 .putExtra(ExternalTun.EXTRA_MTU, data.getInt(PcapLink.KEY_MTU))
 
             ContextCompat.startForegroundService(this, intent)
         } catch (e: Exception) {
+            ExternalTun.stageTunFd(null)
             Log.e(TAG, "Cannot start the capture: $e")
             PcapLog.e(TAG, "Cannot start the capture: $e")
             PcapBridge.onAnalysisEnded(this)
         } finally {
-            // the intent holds its own duplicate of the descriptor
+            // CaptureService owns the staged duplicate of the descriptor
             try {
                 tunFd.close()
             } catch (_: Exception) {

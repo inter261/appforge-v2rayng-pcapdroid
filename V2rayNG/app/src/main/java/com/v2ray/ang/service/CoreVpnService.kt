@@ -307,10 +307,20 @@ class CoreVpnService : VpnService(), ServiceControl {
      */
     private fun configurePerAppProxy(builder: Builder) {
         val selfPackageName = BuildConfig.APPLICATION_ID
+        // PCAPdroid-mitm (TLS decryption) must not enter the tun, or its traffic loops back
+        val mitmPackage = "com.pcapdroid.mitm"
+        fun excludeMitm() {
+            try {
+                builder.addDisallowedApplication(mitmPackage)
+            } catch (_: PackageManager.NameNotFoundException) {
+                // addon not installed
+            }
+        }
 
         // If per-app proxy is not enabled, disallow the VPN service's own package and return
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY) == false) {
             builder.addDisallowedApplication(selfPackageName)
+            excludeMitm()
             return
         }
 
@@ -318,12 +328,19 @@ class CoreVpnService : VpnService(), ServiceControl {
         val apps = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)
         if (apps.isNullOrEmpty()) {
             builder.addDisallowedApplication(selfPackageName)
+            excludeMitm()
             return
         }
 
         val bypassApps = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS)
         // Handle the VPN service's own package according to the mode
-        if (bypassApps) apps.add(selfPackageName) else apps.remove(selfPackageName)
+        if (bypassApps) {
+            apps.add(selfPackageName)
+            apps.add(mitmPackage)
+        } else {
+            apps.remove(selfPackageName)
+            apps.remove(mitmPackage)
+        }
 
         apps.forEach {
             try {

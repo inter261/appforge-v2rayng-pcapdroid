@@ -291,7 +291,8 @@ public class CaptureService extends VpnService implements Runnable {
         mExtMtu = 0;
         mExtEndedNotified.set(false);
         if(intent != null) {
-            mExtTunFd = IntentCompat.getParcelableExtra(intent, ExternalTun.EXTRA_TUN_FD, ParcelFileDescriptor.class);
+            if(intent.getBooleanExtra(ExternalTun.EXTRA_HAS_TUN, false))
+                mExtTunFd = ExternalTun.takeTunFd();
             if(mExtTunFd != null) {
                 mExternalTun = true;
                 mExtVpnIpv4 = intent.getStringExtra(ExternalTun.EXTRA_VPN_IPV4);
@@ -370,8 +371,8 @@ public class CaptureService extends VpnService implements Runnable {
             // The capture runs on the tun of the host VPN
             mSettings.root_capture = false;
             mSettings.input_pcap_path = null;
-            // The mitm addon traffic would loop back into the host tun
-            mSettings.tls_decryption = false;
+            // TLS decryption stays as the user configured it: the host VPN excludes the mitm
+            // addon package from its tun (CoreVpnService), so its traffic does not loop back.
         }
 
         if(mSettings.readFromPcap()) {
