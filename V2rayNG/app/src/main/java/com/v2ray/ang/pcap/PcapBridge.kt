@@ -2,10 +2,14 @@ package com.v2ray.ang.pcap
 
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.widget.Toast
+import com.emanuelef.remote_capture.CaptureService
 import com.emanuelef.remote_capture.ExternalTun
+import com.emanuelef.remote_capture.Log
 import com.emanuelef.remote_capture.model.CaptureSettings
 import com.v2ray.ang.R
 import com.v2ray.ang.handler.MmkvManager
@@ -31,11 +35,17 @@ object PcapBridge : ExternalTun.Provider {
     override fun isAvailable(): Boolean = true
 
     override fun startAnalysis(ctx: Context, settings: CaptureSettings): Boolean {
-        if (!MmkvManager.decodeSettingsBool(PcapLink.PREF_VPN_UP, false)) {
+        val vpnUp = MmkvManager.decodeSettingsBool(PcapLink.PREF_VPN_UP, false)
+        val hev = SettingsManager.isUsingHevTun()
+        Log.i(TAG, "startAnalysis: vpnUp=$vpnUp hevTunnel=$hev")
+
+        if (!vpnUp) {
+            Log.w(TAG, "V2Ray VPN is not running: cannot attach")
             toast(ctx, R.string.pcap_need_vpn)
             return false
         }
-        if (!SettingsManager.isUsingHevTun()) {
+        if (!hev) {
+            Log.w(TAG, "HEV tunnel mode is disabled: cannot attach")
             toast(ctx, R.string.pcap_need_hev)
             return false
         }
@@ -46,10 +56,19 @@ object PcapBridge : ExternalTun.Provider {
                 .setPackage(ctx.packageName)
                 .putExtra(PcapLink.EXTRA_ENABLE, true)
         )
+
+        // The daemon answers asynchronously: if nothing started, tell why instead of waiting forever
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (!CaptureService.isServiceActive()) {
+                Log.w(TAG, "The VPN service did not start the capture within 6s")
+                toast(ctx, R.string.pcap_not_started)
+            }
+        }, 6000)
         return true
     }
 
     override fun onAnalysisEnded(ctx: Context) {
+        Log.i(TAG, "capture ended, giving the tun back to the VPN service")
         val reply = daemonReply
         daemonReply = null
         try {
@@ -64,6 +83,8 @@ object PcapBridge : ExternalTun.Provider {
         pendingSettings = null
         return s
     }
+
+    private const val TAG = "PcapBridge"
 
     private fun toast(ctx: Context, resId: Int) {
         Toast.makeText(ctx.applicationContext, resId, Toast.LENGTH_LONG).show()

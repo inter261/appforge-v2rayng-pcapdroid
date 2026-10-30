@@ -564,5 +564,6 @@
     <!-- PCAPdroid integration -->
     <string name="title_pcap_analysis">Traffic analysis (PCAPdroid)</string>
     <string name="pcap_need_vpn">Connect V2Ray first: the analysis runs on the V2Ray VPN</string>
+    <string name="pcap_not_started">The analysis did not start. Reconnect V2Ray and try again</string>
     <string name="pcap_need_hev">The analysis requires the HEV tunnel mode (enabled by default in Settings)</string>
 </resources>

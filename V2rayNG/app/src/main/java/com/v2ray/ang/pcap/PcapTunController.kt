@@ -62,8 +62,14 @@ class PcapTunController(
 
     @Synchronized
     fun enable() {
-        if (active || shuttingDown || !isVpnRunning() || !SettingsManager.isUsingHevTun()) return
-        if (tunProvider() == null) return
+        if (active || shuttingDown || !isVpnRunning() || !SettingsManager.isUsingHevTun()) {
+            LogUtil.w(AppConfig.TAG, "PCAP: enable ignored (active=$active shuttingDown=$shuttingDown vpnRunning=${isVpnRunning()} hev=${SettingsManager.isUsingHevTun()})")
+            return
+        }
+        if (tunProvider() == null) {
+            LogUtil.w(AppConfig.TAG, "PCAP: enable ignored, no tun interface")
+            return
+        }
 
         LogUtil.i(AppConfig.TAG, "PCAP: handing the tun to PCAPdroid")
         stopHev()

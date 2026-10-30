@@ -14,6 +14,7 @@ import androidx.core.os.BundleCompat
 import androidx.preference.PreferenceManager
 import com.emanuelef.remote_capture.CaptureService
 import com.emanuelef.remote_capture.ExternalTun
+import com.emanuelef.remote_capture.Log as PcapLog
 import com.emanuelef.remote_capture.model.CaptureSettings
 import com.emanuelef.remote_capture.model.Prefs
 
@@ -36,6 +37,7 @@ class PcapLinkService : Service() {
 
     private fun handleStart(msg: Message) {
         PcapBridge.daemonReply = msg.replyTo
+        PcapLog.i(TAG, "tun received from the VPN service, starting the capture")
         val data = msg.data
         val tunFd = BundleCompat.getParcelable(data, PcapLink.KEY_TUN_FD, ParcelFileDescriptor::class.java)
         if (tunFd == null) {
@@ -75,6 +77,7 @@ class PcapLinkService : Service() {
             ContextCompat.startForegroundService(this, intent)
         } catch (e: Exception) {
             Log.e(TAG, "Cannot start the capture: $e")
+            PcapLog.e(TAG, "Cannot start the capture: $e")
             PcapBridge.onAnalysisEnded(this)
         } finally {
             // the intent holds its own duplicate of the descriptor
