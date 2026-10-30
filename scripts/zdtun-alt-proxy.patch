@@ -1,0 +1,157 @@
+diff --git a/socks5.c b/socks5.c
+index 56cd3b7..13c4441 100644
+--- a/socks5.c
++++ b/socks5.c
+@@ -62,9 +62,12 @@ typedef enum {
+ 
+ /* ******************************************************* */
+ 
++#define S5_USER(tun, conn) ((conn)->socks5_alt ? (tun)->socks5_alt_user : (tun)->socks5_user)
++#define S5_PASS(tun, conn) ((conn)->socks5_alt ? (tun)->socks5_alt_pass : (tun)->socks5_pass)
++
+ int socks5_connect(zdtun_t *tun, zdtun_conn_t *conn) {
+   // ver, nauth, no_auth|username_password
+-  uint8_t hello[] = {5, 1, tun->socks5_user ? SOCKS5_AUTH_USERNAME_PASSWORD : 0};
++  uint8_t hello[] = {5, 1, S5_USER(tun, conn) ? SOCKS5_AUTH_USERNAME_PASSWORD : 0};
+ 
+   if(send(conn->sock, hello, 3, 0) < 0)
+     return close_with_socket_error(tun, conn, "SOCKS5_HELLO send");
+@@ -80,8 +83,8 @@ int socks5_connect(zdtun_t *tun, zdtun_conn_t *conn) {
+ 
+ // Client auth request - https://datatracker.ietf.org/doc/html/rfc1929
+ static int socks5_auth(zdtun_t *tun, zdtun_conn_t *conn) {
+-  int user_len = strlen(tun->socks5_user);
+-  int pass_len = strlen(tun->socks5_pass);
++  int user_len = strlen(S5_USER(tun, conn));
++  int pass_len = strlen(S5_PASS(tun, conn));
+   int i = 0;
+ 
+   uint8_t auth_req[3 + user_len + pass_len];
+@@ -89,11 +92,11 @@ static int socks5_auth(zdtun_t *tun, zdtun_conn_t *conn) {
+   auth_req[i++] = 1;
+ 
+   auth_req[i++] = user_len;
+-  memcpy(auth_req + i, tun->socks5_user, user_len);
++  memcpy(auth_req + i, S5_USER(tun, conn), user_len);
+   i += user_len;
+ 
+   auth_req[i++] = pass_len;
+-  memcpy(auth_req + i, tun->socks5_pass, pass_len);
++  memcpy(auth_req + i, S5_PASS(tun, conn), pass_len);
+   i += pass_len;
+ 
+   if(send(conn->sock, auth_req, i, 0) < 0)
+@@ -150,7 +153,7 @@ int handle_socks5_reply(zdtun_t *tun, zdtun_conn_t *conn, char *data, int len) {
+     }
+ 
+     if(reply->cauth != 0) {
+-      if((reply->cauth == SOCKS5_AUTH_USERNAME_PASSWORD) && tun->socks5_user)
++      if((reply->cauth == SOCKS5_AUTH_USERNAME_PASSWORD) && S5_USER(tun, conn))
+         return socks5_auth(tun, conn);
+ 
+       error("SOCKS5 bad auth: %d", reply->cauth);
+diff --git a/zdtun.c b/zdtun.c
+index 5d97d9c..6bf6771 100644
+--- a/zdtun.c
++++ b/zdtun.c
+@@ -104,6 +104,7 @@ typedef struct zdtun_conn {
+ 
+   proxy_t *dnat;
+   proxy_mode_t proxy_mode;
++  uint8_t socks5_alt;       // 1: use the alternative SOCKS5 proxy (see zdtun_conn_proxy_alt)
+   socks5_status_t socks5_status;
+   uint8_t socks5_skip;
+ 
+@@ -151,6 +152,10 @@ typedef struct zdtun_t {
+   char *socks5_user;
+   char *socks5_pass;
+ 
++  proxy_t socks5_alt;
++  char *socks5_alt_user;
++  char *socks5_alt_pass;
++
+   zdtun_conn_t *conn_table;
+   udp_mapping_t *udp_mappings;
+ } zdtun_t;
+@@ -204,7 +209,7 @@ static uint8_t sock_ipver(zdtun_t *tun, zdtun_conn_t *conn) {
+   if(conn->proxy_mode == PROXY_DNAT)
+     return conn->dnat->ipver;
+   else if(conn->proxy_mode == PROXY_SOCKS5)
+-    return tun->socks5.ipver;
++    return conn->socks5_alt ? tun->socks5_alt.ipver : tun->socks5.ipver;
+   else
+     return conn->tuple.ipver;
+ }
+@@ -363,6 +368,8 @@ void zdtun_set_socks5_proxy(zdtun_t *tun, const zdtun_ip_t *proxy_ip,
+ void zdtun_set_socks5_userpass(zdtun_t *tun, const char *username, const char *password) {
+   free(tun->socks5_user);
+   free(tun->socks5_pass);
++  free(tun->socks5_alt_user);
++  free(tun->socks5_alt_pass);
+ 
+   tun->socks5_user = strdup(username);
+   tun->socks5_pass = strdup(password);
+@@ -399,6 +406,26 @@ socket_t zdtun_conn_get_socket(const zdtun_conn_t *conn) {
+   return conn->sock;
+ }
+ 
++void zdtun_set_socks5_alt_proxy(zdtun_t *tun, const zdtun_ip_t *proxy_ip,
++        uint16_t proxy_port, uint8_t ipver, const char *username, const char *password) {
++  tun->socks5_alt.ip = *proxy_ip;
++  tun->socks5_alt.port = proxy_port;
++  tun->socks5_alt.ipver = ipver;
++
++  free(tun->socks5_alt_user);
++  free(tun->socks5_alt_pass);
++  tun->socks5_alt_user = (username && *username && password && *password) ? strdup(username) : NULL;
++  tun->socks5_alt_pass = tun->socks5_alt_user ? strdup(password) : NULL;
++}
++
++void zdtun_conn_proxy_alt(zdtun_conn_t *conn) {
++  // NOTE: only TCP is currently supported
++  if(conn->tuple.ipproto == IPPROTO_TCP) {
++    conn->proxy_mode = PROXY_SOCKS5;
++    conn->socks5_alt = 1;
++  }
++}
++
+ void zdtun_conn_proxy(zdtun_conn_t *conn) {
+   // NOTE: only TCP is currently supported
+   if(conn->tuple.ipproto == IPPROTO_TCP)
+@@ -464,6 +491,8 @@ void zdtun_finalize(zdtun_t *tun) {
+ 
+   free(tun->socks5_user);
+   free(tun->socks5_pass);
++  free(tun->socks5_alt_user);
++  free(tun->socks5_alt_pass);
+   free(tun);
+ }
+ 
+@@ -1089,7 +1118,7 @@ static void fill_conn_sockaddr(zdtun_t *tun, zdtun_conn_t *conn,
+   if(conn->proxy_mode == PROXY_DNAT)
+     proxy = conn->dnat;
+   else if(conn->proxy_mode == PROXY_SOCKS5)
+-    proxy = &tun->socks5;
++    proxy = conn->socks5_alt ? &tun->socks5_alt : &tun->socks5;
+   else
+     proxy = NULL;
+ 
+diff --git a/zdtun.h b/zdtun.h
+index 780dd91..58e0bb9 100644
+--- a/zdtun.h
++++ b/zdtun.h
+@@ -507,6 +507,14 @@ void zdtun_set_socks5_userpass(zdtun_t *tun, const char *username, const char *p
+ void* zdtun_conn_get_userdata(const zdtun_conn_t *conn);
+ void zdtun_conn_set_userdata(zdtun_conn_t *conn, void *userdata);
+ void zdtun_conn_proxy(zdtun_conn_t *conn);
++
++/*
++ * Alternative SOCKS5 proxy (optional username/password, pass NULL for none). Connections
++ * marked with zdtun_conn_proxy_alt use it instead of the one set by zdtun_set_socks5_proxy.
++ */
++void zdtun_set_socks5_alt_proxy(zdtun_t *tun, const zdtun_ip_t *proxy_ip, uint16_t proxy_port,
++        uint8_t ipver, const char *username, const char *password);
++void zdtun_conn_proxy_alt(zdtun_conn_t *conn);
+ void zdtun_conn_dnat(zdtun_conn_t *conn, const zdtun_ip_t *proxy_ip, uint16_t proxy_port, uint8_t ipver);
+ void zdtun_conn_close(zdtun_t *tun, zdtun_conn_t *conn, zdtun_conn_status_t status);
+ const zdtun_5tuple_t* zdtun_conn_get_5tuple(const zdtun_conn_t *conn);

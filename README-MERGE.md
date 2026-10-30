@@ -39,7 +39,7 @@ PCAP ON  : tun -> PCAPdroid -> SOCKS5 lokal -> Xray
 
 1. **UDP tidak lewat Xray.** zdtun (mesin PCAPdroid) hanya mem-proxy-kan TCP ke SOCKS5; UDP (termasuk DNS)
    keluar langsung. QUIC otomatis diblokir supaya aplikasi jatuh ke TCP. Mode OFF tidak terpengaruh.
-2. **TLS decryption (MITM) dimatikan** saat ON: trafik addon-nya akan berputar balik ke tun.
+2. **TLS decryption (MITM)** bisa dipakai (butuh PCAPdroid-mitm + CA). Saklar "Decrypted traffic via V2Ray" (default ON): koneksi keluar addon lewat Xray; OFF = langsung keluar. Memakai patch `scripts/zdtun-alt-proxy.patch` pada zdtun. Belum dikompilasi/diuji di HP.
 3. Filter per-aplikasi memakai pengaturan **Per-app proxy** v2rayNG (bukan filter PCAPdroid).
 4. Mode root dan buka file PCAP milik PCAPdroid tetap tersedia seperti biasa.
 

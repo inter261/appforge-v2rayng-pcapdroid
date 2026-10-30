@@ -303,6 +303,8 @@
     <string name="capture_all_apps">Capture the traffic of all the apps</string>
     <string name="save_ok">Saved</string>
     <string name="tls_decryption">TLS decryption</string>
+    <string name="mitm_via_xray">Decrypted traffic via V2Ray</string>
+    <string name="mitm_via_xray_summary">ON: the connections of the mitm addon go out through V2Ray (Xray). OFF: they go out directly, without V2Ray</string>
     <string name="tls_decryption_summary">Decrypt the SSL/TLS traffic by performing mitm. This may now work with some apps, check out the user guide</string>
     <string name="traffic_inspection">Traffic inspection</string>
     <string name="mitm_start_failed">Could not start the mitm service. Try to open the mitm addon app manually and retry</string>

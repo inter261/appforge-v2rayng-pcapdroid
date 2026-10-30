@@ -79,6 +79,18 @@ public final class ExternalTun {
         }
     }
 
+    // Local SOCKS5 inbound of the host core, used by the mitm addon upstream connections
+    private static volatile int sXrayPort = 0;
+    private static volatile String sXrayAuth = null;
+
+    public static void setXraySocks(int port, @Nullable String auth) {
+        sXrayPort = port;
+        sXrayAuth = auth;
+    }
+
+    public static int getXrayPort() { return sXrayPort; }
+    public static @Nullable String getXrayAuth() { return sXrayAuth; }
+
     private ExternalTun() {}
 
     public static void setProvider(@Nullable Provider provider) {

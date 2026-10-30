@@ -60,6 +60,14 @@ class PcapLinkService : Service() {
             settings.socks5_username = data.getString(PcapLink.KEY_SOCKS_USER) ?: ""
             settings.socks5_password = data.getString(PcapLink.KEY_SOCKS_PASS) ?: ""
 
+            // Upstream of the mitm addon (TLS decryption): same inbound of the Xray core
+            val xrayUser = settings.socks5_username
+            val xrayPass = settings.socks5_password
+            ExternalTun.setXraySocks(
+                data.getInt(PcapLink.KEY_SOCKS_PORT),
+                if (xrayUser.isNotEmpty() && xrayPass.isNotEmpty()) "$xrayUser:$xrayPass" else null
+            )
+
             settings.ip_mode =
                 if (data.getBoolean(PcapLink.KEY_IPV6)) Prefs.IpMode.BOTH else Prefs.IpMode.IPV4_ONLY
 

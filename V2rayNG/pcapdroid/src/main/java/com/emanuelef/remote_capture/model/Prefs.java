@@ -72,6 +72,7 @@ public class Prefs {
     public static final String PREF_MALWARE_DETECTION = "malware_detection";
     public static final String PREF_FIREWALL = "firewall";
     public static final String PREF_TLS_DECRYPTION_KEY = "tls_decryption";
+    public static final String PREF_MITM_VIA_XRAY = "mitm_via_xray";
     public static final String PREF_APP_FILTER = "app_filter";
     public static final String PREF_APP_FILTER_ENABLED = "app_filter_enabled";
     public static final String PREF_HTTP_SERVER_PORT = "http_server_port";
@@ -226,6 +227,7 @@ public class Prefs {
     public static int getCollectorPort(SharedPreferences p)  { return(Integer.parseInt(p.getString(PREF_COLLECTOR_PORT_KEY, "1234"))); }
     public static DumpMode getDumpMode(SharedPreferences p)  { return(getDumpMode(p.getString(PREF_PCAP_DUMP_MODE, DEFAULT_DUMP_MODE))); }
     public static int getHttpServerPort(SharedPreferences p) { return(Integer.parseInt(p.getString(Prefs.PREF_HTTP_SERVER_PORT, "8080"))); }
+    public static boolean getMitmViaXray(SharedPreferences p) { return(p.getBoolean(PREF_MITM_VIA_XRAY, true)); }
     public static boolean getTlsDecryptionEnabled(SharedPreferences p) { return(p.getBoolean(PREF_TLS_DECRYPTION_KEY, false)); }
     public static boolean getSocks5Enabled(SharedPreferences p)     { return(p.getBoolean(PREF_SOCKS5_ENABLED_KEY, false)); }
     public static String getSocks5ProxyHost(SharedPreferences p)    { return(p.getString(PREF_SOCKS5_PROXY_IP_KEY, "0.0.0.0")); }

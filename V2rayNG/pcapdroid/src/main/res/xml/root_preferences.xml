@@ -74,6 +74,14 @@
             app:summary="@string/tls_decryption_summary"
             app:defaultValue="false" />
 
+        <SwitchPreference
+            app:key="mitm_via_xray"
+            app:title="@string/mitm_via_xray"
+            app:iconSpaceReserved="false"
+            app:summary="@string/mitm_via_xray_summary"
+            app:dependency="tls_decryption"
+            app:defaultValue="true" />
+
         <Preference
             app:key="mitm_setup_wizard"
             app:title="@string/mitm_setup_wizard"

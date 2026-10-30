@@ -465,6 +465,12 @@ int run_vpn(pcapdroid_t *pd) {
             zdtun_set_socks5_userpass(zdt, pd->socks5.proxy_user, pd->socks5.proxy_pass);
     }
 
+    if(pd->socks5.alt_enabled) {
+        zdtun_set_socks5_alt_proxy(zdt, &pd->socks5.alt_ip, pd->socks5.alt_port, pd->socks5.alt_ipver,
+            pd->socks5.alt_user[0] ? pd->socks5.alt_user : NULL,
+            pd->socks5.alt_pass[0] ? pd->socks5.alt_pass : NULL);
+    }
+
     pd_refresh_time(pd);
     next_purge_ms = pd->now_ms + PERIODIC_PURGE_TIMEOUT_MS;
 
@@ -557,7 +563,14 @@ int run_vpn(pcapdroid_t *pd) {
                 if(data->sent_pkts == 0) {
                     if(pd_check_port_map(conn, data->uid))
                         data->port_mapping_applied = true;
-                    else if(should_proxify(pd, tuple, data)) {
+                    else if((pd->mitm_addon_uid > 0) && (data->uid == pd->mitm_addon_uid) &&
+                            (tuple->ipproto == IPPROTO_TCP)) {
+                        // Upstream connections of the mitm addon: they must never go back to the
+                        // mitm itself. Via the Xray SOCKS5 if enabled, otherwise straight out.
+                        // NOTE: not marked as proxied, they are not decrypted traffic
+                        if(pd->socks5.alt_enabled)
+                            zdtun_conn_proxy_alt(conn);
+                    } else if(should_proxify(pd, tuple, data)) {
                         zdtun_conn_proxy(conn);
                         data->proxied = true;
                     }

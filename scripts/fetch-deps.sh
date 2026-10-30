@@ -26,6 +26,11 @@ pin "$SUB/MaxMind-DB-Reader-java" https://github.com/emanuele-f/MaxMind-DB-Reade
 pin "$SUB/PCAPdroid-ushark-bin"   https://github.com/emanuele-f/PCAPdroid-ushark-bin   b9b0582fb05afddb88f00e03d08e95126226b66d
 pin "$SUB/libpcap"                https://github.com/the-tcpdump-group/libpcap          a999701dca5c873779281938baee6bc185a8d4dc
 pin "$SUB/zdtun"                  https://github.com/emanuele-f/zdtun                  c2a2674a411efdd71f7595e5395d8b49c52ab347
+# Alternative SOCKS5 proxy per connection (upstream of the mitm addon through Xray)
+if [ ! -f "$SUB/zdtun/.patched-alt-proxy" ]; then
+  git -C "$SUB/zdtun" apply "$ROOT/scripts/zdtun-alt-proxy.patch"
+  touch "$SUB/zdtun/.patched-alt-proxy"
+fi
 pin "$SUB/zstd"                   https://github.com/facebook/zstd                      f8745da6ff1ad1e7bab384bd1f9d742439278e99
 pin "$SUB/nDPI"                   https://github.com/emanuele-f/nDPI                    40a1605bf7643488a3ac55ac2e2564dc8eaa6869
 

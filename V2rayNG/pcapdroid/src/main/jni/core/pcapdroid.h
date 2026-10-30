@@ -285,6 +285,14 @@ typedef struct pcapdroid {
         int proxy_ipver;
         char proxy_user[32];
         char proxy_pass[32];
+
+        // Alternative SOCKS5 proxy (V2Ray Me): used by the connections of the mitm addon
+        bool alt_enabled;
+        zdtun_ip_t alt_ip;
+        u_int32_t alt_port;
+        int alt_ipver;
+        char alt_user[32];
+        char alt_pass[32];
     } socks5;
 
     struct {

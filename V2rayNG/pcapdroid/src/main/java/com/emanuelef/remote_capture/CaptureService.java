@@ -1618,6 +1618,18 @@ public class CaptureService extends VpnService implements Runnable {
 
     public String getSocks5ProxyAuth() {  return(mSocks5Auth);  }
 
+    // Alternative SOCKS5 (host core): upstream of the mitm addon, see ExternalTun.setXraySocks
+    public int getSocks5AltEnabled() {
+        return (mExternalTun && mSettings.tls_decryption && Prefs.getMitmViaXray(mPrefs)
+                && (ExternalTun.getXrayPort() > 0)) ? 1 : 0;
+    }
+    public String getSocks5AltAddress() { return "127.0.0.1"; }
+    public int getSocks5AltPort() { return ExternalTun.getXrayPort(); }
+    public String getSocks5AltAuth() {
+        String auth = ExternalTun.getXrayAuth();
+        return (auth != null) ? auth : "";
+    }
+
     public int getIPv4Enabled() { return((mSettings.ip_mode != Prefs.IpMode.IPV6_ONLY) ? 1 : 0); }
 
     public int getIPv6Enabled() { return((mSettings.ip_mode != Prefs.IpMode.IPV4_ONLY) ? 1 : 0); }

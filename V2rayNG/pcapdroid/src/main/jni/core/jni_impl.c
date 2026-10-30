@@ -591,6 +591,23 @@ static void getSocks5ProxyAuth(pcapdroid_t *pd) {
     //log_d("SOCKS5: user=%s pass=%s", pd->socks5.proxy_user, pd->socks5.proxy_pass);
 }
 
+static void getSocks5AltAuth(pcapdroid_t *pd) {
+    char buf[64];
+    buf[0] = '\0';
+
+    getStringPref(pd, "getSocks5AltAuth", buf, sizeof(buf));
+    char *sep = strchr(buf, ':');
+
+    if(!sep)
+        return;
+
+    *sep = '\0';
+    strncpy(pd->socks5.alt_user, buf, sizeof(pd->socks5.alt_user) - 1);
+    pd->socks5.alt_user[sizeof(pd->socks5.alt_user) - 1] = '\0';
+    strncpy(pd->socks5.alt_pass, sep + 1, sizeof(pd->socks5.alt_pass) - 1);
+    pd->socks5.alt_pass[sizeof(pd->socks5.alt_pass) - 1] = '\0';
+}
+
 static void init_jni(JNIEnv *env) {
     // NOTE: these are bound to this specific env
 
@@ -720,6 +737,13 @@ Java_com_emanuelef_remote_1capture_CaptureService_runPacketLoop(JNIEnv *env, jcl
 
     if(pd.socks5.enabled)
         getSocks5ProxyAuth(&pd);
+
+    pd.socks5.alt_enabled = (bool) getIntPref(env, vpn, "getSocks5AltEnabled");
+    if(pd.socks5.alt_enabled) {
+        pd.socks5.alt_ip = getIPPref(env, vpn, "getSocks5AltAddress", &pd.socks5.alt_ipver);
+        pd.socks5.alt_port = htons(getIntPref(env, vpn, "getSocks5AltPort"));
+        getSocks5AltAuth(&pd);
+    }
 
     if(pd.vpn_capture)
         pd.vpn.tunfd = tunfd;
