@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pcap_dump_modes">
+        <item>none</item>
+        <item>http_server</item>
+        <item>pcap_file</item>
+        <item>udp_exporter</item>
+        <item>tcp_exporter</item>
+    </string-array>
+    <string-array name="pcap_dump_modes_labels">
+        <item>@string/no_dump</item>
+        <item>@string/http_server</item>
+        <item>@string/pcap_file</item>
+        <item>@string/udp_exporter</item>
+        <item>@string/tcp_exporter</item>
+    </string-array>
+    <string-array name="pcap_dump_modes_descriptions">
+        <item>@string/no_dump_info</item>
+        <item>@string/http_server_info</item>
+        <item>@string/pcap_file_info</item>
+        <item>@string/udp_exporter_info</item>
+        <item>@string/tcp_exporter_info</item>
+    </string-array>
+
+    <string-array name="ip_mode">
+        <item>ipv4</item>
+        <item>ipv6</item>
+        <item>both</item>
+    </string-array>
+    <string-array name="ip_mode_labels">
+        <item>@string/ipv4_only</item>
+        <item>@string/ipv6_only</item>
+        <item>@string/ip_both</item>
+    </string-array>
+
+    <string-array name="block_quic">
+        <item>never</item>
+        <item>always</item>
+        <item>to_decrypt</item>
+    </string-array>
+    <string-array name="block_quic_labels">
+        <item>@string/never</item>
+        <item>@string/always</item>
+        <item>@string/for_connections_to_decrypt</item>
+    </string-array>
+</resources>

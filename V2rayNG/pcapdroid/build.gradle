@@ -1,0 +1,86 @@
+// PCAPdroid, converted from an application into a library module of V2Ray Me.
+// Upstream: https://github.com/emanuele-f/PCAPdroid (GPLv3)
+//
+// The native code (nDPI, libpcap, zdtun, zstd) is built with CMake from
+// ../submodules and ../generated, both relative to the Gradle project root.
+// ../submodules is populated by scripts/fetch-deps.sh (see README-MERGE.md).
+
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace = 'com.emanuelef.remote_capture'
+    compileSdk = 37
+    ndkVersion = "28.2.13676358"
+
+    defaultConfig {
+        minSdk = 24
+
+        // A library BuildConfig has no VERSION_CODE / VERSION_NAME / APPLICATION_ID,
+        // but the PCAPdroid sources read them: provide them explicitly.
+        buildConfigField "int", "VERSION_CODE", "95"
+        buildConfigField "String", "VERSION_NAME", "\"2.0.2\""
+        buildConfigField "String", "APPLICATION_ID", "\"com.v2ray.me\""
+
+        // arm64 only
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+        externalNativeBuild {
+            cmake {
+                abiFilters "arm64-v8a"
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/jni/CMakeLists.txt')
+            version = "3.22.1"
+        }
+    }
+
+    compileOptions {
+        encoding = "UTF-8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs += '../submodules/MaxMind-DB-Reader-java/src/main/java'
+
+            // Wireshark dissector (libushark.so) used by the PCAP decryption/dissection features
+            jniLibs.srcDirs += '../submodules/PCAPdroid-ushark-bin/release/jniLibs'
+        }
+    }
+}
+
+dependencies {
+    // AndroidX
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
+    implementation 'androidx.fragment:fragment:1.8.9'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation "androidx.navigation:navigation-fragment:2.9.8"
+    implementation "androidx.navigation:navigation-ui:2.9.8"
+
+    // Google
+    implementation 'com.google.android.material:material:1.14.0'
+    implementation 'com.google.code.gson:gson:2.14.0'
+    implementation 'org.brotli:dec:0.1.2'
+
+    // Third-party
+    implementation 'cat.ereza:customactivityoncrash:2.4.0'
+    implementation 'com.github.KaKaVip:Android-Flag-Kit:v0.1'
+    implementation 'com.github.AppIntro:AppIntro:6.2.0'
+    implementation 'com.github.androidmads:QRGenerator:1.0.1'
+}

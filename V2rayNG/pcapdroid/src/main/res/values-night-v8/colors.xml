@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorTab">#5A458D</color>
+    <color name="colorTabText">@android:color/secondary_text_dark</color>
+    <color name="colorTabTextSelected">@android:color/primary_text_dark</color>
+    <color name="colorPrimary">#6C52AB</color>
+    <color name="colorPrimaryDark">#24144D</color>
+    <color name="colorActionBar">#121212</color>
+    <color name="colorAccent">#03DAC6</color>
+    <color name="colorAccentLight">#BCEBE7</color>
+    <color name="colorBackgroundGray">#1CFFFFFF</color>
+    <color name="navViewBackground">#FF202020</color>
+    <color name="backgroundColor">@color/background_material_dark</color>
+    <color name="drawerItemColor">@android:color/primary_text_dark</color>
+    <color name="highContrast">#FFFFFF</color>
+    <color name="cardBorder">#2A2A2A</color>
+    <color name="appBadgeBg">#616161</color>
+    <color name="appBadgeText">#FFFFFF</color>
+</resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/group_app">
+        <item
+            android:id="@+id/item_apps"
+            android:title="@string/apps"
+            android:icon="@drawable/ic_apps" />
+        <item
+            android:id="@+id/action_stats"
+            android:title="@string/stats"
+            android:icon="@drawable/ic_stacked_bar_chart" />
+        <item
+            android:id="@+id/tls_decryption"
+            android:title="@string/decryption_rules"
+            android:icon="@drawable/ic_lock_open_alt" />
+        <item
+            android:id="@+id/firewall"
+            android:title="@string/firewall"
+            android:icon="@drawable/ic_shield" />
+        <item
+            android:id="@+id/malware_detection"
+            android:title="@string/malware_detection"
+            android:icon="@drawable/ic_bug" />
+        <item
+            android:id="@+id/open_log"
+            android:title="@string/app_log"
+            android:icon="@drawable/ic_text_snippet" />
+        <item
+            android:id="@+id/paid_features"
+            android:visible="false"
+            android:title="@string/paid_features"
+            android:icon="@drawable/ic_money" />
+    </group>
+    <group android:id="@+id/group_social">
+        <item
+            android:id="@+id/action_open_user_guide"
+            android:title="@string/user_guide"
+            android:icon="@drawable/ic_book" />
+        <item
+            android:id="@+id/action_donate"
+            android:title="@string/donate"
+            android:icon="@drawable/ic_money" />
+        <item
+            android:id="@+id/action_share_app"
+            android:title="@string/share"
+            android:icon="@drawable/ic_share" />
+        <item
+            android:id="@+id/action_open_telegram"
+            android:title="@string/open_telegram_group"
+            android:icon="@drawable/ic_telegram" />
+        <item
+            android:id="@+id/action_about"
+            android:title="@string/about"
+            android:icon="@drawable/ic_copyright" />
+    </group>
+</menu>

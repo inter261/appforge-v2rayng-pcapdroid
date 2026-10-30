@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission-sdk-23 android:name="android.permission.QUERY_ALL_PACKAGES" /> <!-- https://developer.android.com/preview/privacy/package-visibility -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WRITE_CLIPS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
+    <!-- Required with root to properly resolve UIDs cross-users/profiles. Granted via root -->
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS" android:protectionLevel="signature"  tools:ignore="ProtectedPermissions" />
+
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+
+    <application>
+
+        <activity
+            android:name=".activities.MainActivity"
+            android:theme="@style/AppTheme.SplashScreen"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".activities.CaptureCtrl"
+            android:theme="@style/AppTheme.Floating"
+            android:launchMode="singleTop"
+            android:exported="true" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.prefs.EditCtrlPermissions"
+            android:parentActivityName=".activities.prefs.SettingsActivity" />
+
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.OnBoardingActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.ErrorActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.ConnectionDetailsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.AppDetailsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.ConnectionsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.HttpDetailsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.AppsActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.StatsActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity"/>
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.prefs.SettingsActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.prefs.VpnExemptionsActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.prefs.SettingsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.prefs.PortMapActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.prefs.SettingsActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.prefs.PortMapExemptionsActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.prefs.PortMapActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.AboutActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.LogviewActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.MalwareDetection"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.FirewallActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.EditListActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.EditFilterActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.EditFilterActivity"
+            android:launchMode="singleTop" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.HttpLogFilterActivity"
+            android:launchMode="singleTop" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.MitmSetupWizard"
+            android:launchMode="singleTop" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.AppFilterActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:theme="@style/AppTheme"
+            android:name=".activities.CaptureListActivity"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <service
+            android:name=".CaptureService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="run the VpnService to monitor network traffic"/>
+
+        </service>
+        <service
+            android:name=".VpnReconnectService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="waits for the termination of the active VpnService"/>
+        </service>
+
+        <receiver android:name="com.emanuelef.remote_capture.ActionReceiver" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

@@ -1,0 +1,114 @@
+name: Build APK (V2Ray Me)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6.0.1
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          cmdline-tools-version: '14742923'
+          packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
+
+      - name: Install NDK and CMake
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            --install "ndk;28.2.13676358" "cmake;3.22.1"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+
+      # PCAPdroid submodules, hev-socks5-tunnel and libv2ray.aar (pinned versions)
+      - name: Fetch third-party sources
+        run: bash scripts/fetch-deps.sh
+
+      - name: Restore cached libhevtun
+        id: cache-libhevtun-restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ github.workspace }}/libs
+          key: libhevtun-arm64-${{ hashFiles('compile-hevtun.sh', 'scripts/fetch-deps.sh') }}
+
+      - name: Build libhevtun (arm64-v8a)
+        if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+        run: bash compile-hevtun.sh
+
+      - name: Save libhevtun
+        if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ github.workspace }}/libs
+          key: libhevtun-arm64-${{ hashFiles('compile-hevtun.sh', 'scripts/fetch-deps.sh') }}
+
+      - name: Copy libhevtun
+        run: cp -r "${{ github.workspace }}/libs" "${{ github.workspace }}/V2rayNG/app"
+
+      # Signing: by default keystore/testkey.keystore from the repository is used
+      # (alias testkey, passwords "android", see V2rayNG/app/build.gradle.kts).
+      # To use another keystore without committing it, define the secret APP_KEYSTORE_BASE64
+      # (base64 of the file) plus APP_KEYSTORE_PASSWORD, APP_KEYSTORE_ALIAS, APP_KEY_PASSWORD.
+      - name: Prepare signing keystore
+        env:
+          KS_B64: ${{ secrets.APP_KEYSTORE_BASE64 }}
+          KS_PASS_SECRET: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+          KS_ALIAS_SECRET: ${{ secrets.APP_KEYSTORE_ALIAS }}
+          KEY_PASS_SECRET: ${{ secrets.APP_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "KS_FILE=$RUNNER_TEMP/release.jks" >> $GITHUB_ENV
+            echo "KS_PASS=$KS_PASS_SECRET" >> $GITHUB_ENV
+            echo "KS_ALIAS=$KS_ALIAS_SECRET" >> $GITHUB_ENV
+            echo "KEY_PASS=$KEY_PASS_SECRET" >> $GITHUB_ENV
+            echo "Using the keystore from secrets"
+          elif [ -f keystore/testkey.keystore ]; then
+            echo "Using keystore/testkey.keystore"
+          else
+            echo "::error::No keystore: add keystore/testkey.keystore or the APP_KEYSTORE_BASE64 secret"
+            exit 1
+          fi
+
+      - name: Build APK
+        working-directory: V2rayNG
+        run: |
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          chmod 755 gradlew
+          ./gradlew licenseReleaseReport || echo "license report skipped"
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        if: ${{ success() }}
+        with:
+          name: V2RayMe-arm64-v8a
+          path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*.apk
+
+      # Build reports are the first thing needed to fix a failed build
+      - name: Upload build reports on failure
+        uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: build-reports
+          path: |
+            ${{ github.workspace }}/V2rayNG/**/build/reports/
+            ${{ github.workspace }}/V2rayNG/**/build/outputs/logs/
+          if-no-files-found: ignore
